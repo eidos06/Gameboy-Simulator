@@ -15,7 +15,10 @@ public:
 
 	GB_Byte ReadByte(GB_DoubleByte Address);
 	bool WriteByte(GB_DoubleByte Address, GB_Byte Value);
-
+	bool WriteDoubleByte(GB_DoubleByte Address, GB_DoubleByte Value);
+	
+	GB_DoubleByte ReadDoubleByte(GB_DoubleByte Address);
+	
 	string Get_Title();
 	int Get_Cartridge_Type() { return GB_Rom[0x147]; }
 	int Get_ROM_Size() { return GB_Rom[0x148]; }

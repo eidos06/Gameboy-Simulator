@@ -76,3 +76,16 @@ void GB_memory::init()
 
 }
 
+GB_DoubleByte GB_memory::ReadDoubleByte(GB_DoubleByte Address)
+{
+	
+	return ReadByte(Address+1) << 8 | ReadByte(Address);
+}
+
+bool GB_memory::WriteDoubleByte(GB_DoubleByte Address, GB_DoubleByte Value)
+{
+	WriteByte(Address, Value & 0x00FF);
+	WriteByte(Address + 1,( Value & 0xFF00)>>8);
+	return true;
+}
+

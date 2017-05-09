@@ -14,7 +14,7 @@ public:
 	void init();
 	void CPU_Step();
 	void Opcode_load();
-
+	
 private:
 	
 	GB_memory memory_;
