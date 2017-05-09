@@ -23,7 +23,7 @@ main(int argc, char *argv[])
 	GB_Memory.init();
 	MainWindow.create(192, 144, 100, 100, GB_Memory.Get_Title());
 	
-	GB_CPU CPU;
+	GB_CPU CPU(GB_Memory);
 	CPU.init();
 
 	while (1) {
