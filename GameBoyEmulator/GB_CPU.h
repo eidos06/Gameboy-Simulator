@@ -38,6 +38,17 @@ private:
 	bool Flag_Subtract{ 0 };
 	bool Flag_HalfCarry{ 0 };
 	bool Flag_Carry{ 0 };
+	
+	void GB_ADD(GB_Byte num1);
+	void GB_ADC(GB_Byte num1);
+	void GB_SUB(GB_Byte num1);
+	void GB_SBC(GB_Byte num1);
+	void GB_AND(GB_Byte num1);
+	void GB_OR(GB_Byte num1);
+	void GB_XOR(GB_Byte num1);
+	void GB_CP(GB_Byte num1);
+	void GB_INC(GB_Byte &num1);
+	void GB_DEC(GB_Byte &num1);
 
 	array<function<int()>, 0x100> GB_Opcode;
 
