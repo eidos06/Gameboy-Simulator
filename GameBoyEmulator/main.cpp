@@ -1,11 +1,12 @@
 #include"main.h"
 
+
 using namespace std;
 
 int
 main(int argc, char *argv[])
 {
-	GB_Window MainWindow;
+	//Read the GB File//
 	GB_FileOperator file;
 
 	string sFileName;
@@ -17,22 +18,32 @@ main(int argc, char *argv[])
 		cout << "Open File Error!" << endl;
 		return 1;
 	}
+	//Load in memory//
+	memory_.LoadMemory(file.GetData());
+	PrintInfo(memory_);
+	memory_.init();
+	//Window init
+	MainWindow.create(256, 256, 100, 100, memory_.Get_Title());
 	
-	GB_memory GB_Memory(file.GetData());
-	PrintInfo(GB_Memory);
-	GB_Memory.init();
-	MainWindow.create(192, 144, 100, 100, GB_Memory.Get_Title());
-	
-	GB_CPU CPU(GB_Memory);
 	CPU.init();
+	//CPU Cycle
+	//while (1) {
+	
+		CPU.CPU_Step();
+		MainWindow.reDraw();
+		//if (!MainWindow.fresh())
+	//	{
+	//		break;
+	//	}
+		
+	//}
 
 	while (1) {
-		
 		if (!MainWindow.fresh())
 		{
 			break;
 		}
-		
+
 	}
 	MainWindow.end();
 	
