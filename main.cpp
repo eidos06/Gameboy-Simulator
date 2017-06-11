@@ -1,11 +1,12 @@
 #include"main.h"
 
+
 using namespace std;
 
 int
 main(int argc, char *argv[])
 {
-	GB_Window MainWindow;
+	//Read the GB File//
 	GB_FileOperator file;
 
 	string sFileName;
@@ -17,24 +18,48 @@ main(int argc, char *argv[])
 		cout << "Open File Error!" << endl;
 		return 1;
 	}
+	//Load in memory//
+	memory_.LoadMemory(file.GetData());
+	PrintInfo(memory_);
+	memory_.init();
+	//Window init
+	MainWindow.create(160, 144, 100, 100, memory_.Get_Title());
 	
-	GB_memory GB_Memory(file.GetData());
-	PrintInfo(GB_Memory);
-	GB_Memory.init();
-	MainWindow.create(192, 144, 100, 100, GB_Memory.Get_Title());
-	
-	GB_CPU CPU;
 	CPU.init();
-
+	//CPU Cycle
+	
+	int i = 0;
 	while (1) {
-		
+		//i++;
+		if (i > 1000000)
+			break;
 		if (!MainWindow.fresh())
 		{
 			break;
 		}
-		
+		MainWindow.AddTime(CPU.CPU_Step());
+
+	}
+	
+	cout << "end" << endl;
+	ofstream outRAM;
+	outRAM.open("outRAM.gb", ios::binary);
+
+	for (int i = 0x0000; i <= 0xFFFF; i++)
+	{
+		outRAM << memory_.ReadByte(i);
+	}
+	outRAM.close();
+	cout << "Writen" << endl;
+	
+	while (1) {
+		if (!MainWindow.fresh())
+		{
+			break;
+		}
 	}
 	MainWindow.end();
+	
 	
 	
 
