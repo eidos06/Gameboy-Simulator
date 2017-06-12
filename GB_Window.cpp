@@ -32,43 +32,35 @@ int GB_Window::fresh()
 				done = 1;
 				break;
 			case SDLK_RIGHT:
-				SetBit(keys, 0, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 &= 0xE;
 				cout << "right" <<(int)keys<< endl;
 				break;
 			case SDLK_LEFT:
-				SetBit(keys, 1, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 &= 0xD;
 				cout << "left" << endl;
 				break;
 			case SDLK_UP:
-				SetBit(keys, 2, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 &= 0xB;
 				cout << "up" << endl;
 				break;
 			case SDLK_DOWN:
-				SetBit(keys, 3, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 &= 0x7;
 				cout << "down" << endl;
 				break;
 			case SDLK_a:
-				SetBit(keys, 4, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC0 &= 0xE;
 				cout << "a" << endl;
 				break;
 			case SDLK_b:
-				SetBit(keys, 5, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC0 &= 0xD;
 				cout << "b" << endl;
 				break;
 			case SDLK_SPACE:
-				SetBit(keys, 6, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC0 &= 0xB;
 				cout << "space" << endl;
 				break;
 			case SDLK_RETURN:
-				SetBit(keys, 7, true);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC0 &= 0x7;
 				cout << "enter" << endl;
 				break;
 			}
@@ -76,36 +68,32 @@ int GB_Window::fresh()
 		if ((e.type == SDL_KEYUP)) {
 			switch (e.key.keysym.sym) {
 			case SDLK_RIGHT:
-				SetBit(keys, 0, false);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 |= 0x1;
 				break;
 			case SDLK_LEFT:
-				SetBit(keys, 1, false);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 |= 0x2;
 				break;
 			case SDLK_UP:
-				SetBit(keys, 2, false);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 |= 0x4;
 				break;
 			case SDLK_DOWN:
-				SetBit(keys, 3, false);
-				memory_.WriteByte(0xFF00, keys);
+				memory_.KeysC1 |= 0x8;
 				break;
 			case SDLK_a:
-				SetBit(keys, 4, false);
-				memory_.WriteByte(0xFF00, keys);
+				
+				memory_.KeysC0 |= 0x1;
 				break;
 			case SDLK_b:
-				SetBit(keys, 5, false);
-				memory_.WriteByte(0xFF00, keys);
+				
+				memory_.KeysC0 |= 0x2;
 				break;
 			case SDLK_SPACE:
-				SetBit(keys, 6, false);
-				memory_.WriteByte(0xFF00, keys);
+				
+				memory_.KeysC0 |= 0x4;
 				break;
 			case SDLK_RETURN:
-				SetBit(keys, 7, false);
-				memory_.WriteByte(0xFF00, keys);
+				
+				memory_.KeysC0 |= 0x8;
 				break;
 			}
 		}
@@ -234,8 +222,10 @@ void GB_Window::drawLine(int ly) {
 
 	GB_Byte lcdc = memory_.ReadByte(LCDC_ADDRESS);
 	GB_Byte scx = memory_.ReadByte(SCX_ADDRESS);
+	//cout << "scx"<<(int)scx << endl;
 	GB_Byte scy = memory_.ReadByte(SCY_ADDRESS);
-
+	//cout << "scy"<<(int)scy << endl;
+	
 	bool signed_tile = GetBit(lcdc, 4);
 	int BGTileData = !signed_tile ? 0x9000 : 0x8000;
 	int BGTileMap = !GetBit(lcdc, 3) ? 0x9800 : 0x9C00;

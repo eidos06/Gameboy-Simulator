@@ -30,7 +30,7 @@ public:
 		SpriteInfo(int id);
 	};
 	
-	void UpdateKeys();
+
 	void drawLine(int ly);
 	std::vector<SpriteInfo> getSprites(int ly, bool big_sprites);
 	void resetInterruptFlags();
