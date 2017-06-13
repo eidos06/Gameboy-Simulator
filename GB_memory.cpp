@@ -1,6 +1,7 @@
 #include "GB_memory.h"
-
-GB_memory::GB_memory(const vector<GB_Byte> &inRom)
+#include <iostream>
+using namespace std;
+void GB_memory::LoadMemory(const vector<GB_Byte> &inRom)
 {
 	GB_Rom = inRom;
 	GB_Ram.assign(0xFFFF - 0x8000+1, 0x00);
@@ -8,19 +9,49 @@ GB_memory::GB_memory(const vector<GB_Byte> &inRom)
 
 GB_Byte GB_memory::ReadByte(GB_DoubleByte Address)
 {
+	
 	if (Address < 0x8000)
 		return GB_Rom[Address];
-	else
+	else if (Address == 0xFF00)
+	{
+		if (KeyColumn == 0x10)
+		{
+			
+			//cout << "0x10: " << (int)KeysC0 << endl;
+			return KeysC0;
+		}
+			
+		if (KeyColumn == 0x20)
+		{
+			//cout << "0x20: " << (int)KeysC1 << endl;
+			return KeysC1;
+		}
+		return 0;
+	}
+	else {
 		return GB_Ram[Address - 0x8000];
+	}
+		
 }
 
 bool GB_memory::WriteByte(GB_DoubleByte Address, GB_Byte Value)
 {
 	if (Address < 0x8000)
 		GB_Rom[Address] = Value;
+	else if (Address == 0xFF00)
+	{
+		KeyColumn = Value & 0x30;
+	}
+
 	else
+	{
 		GB_Ram[Address - 0x8000] = Value;
+	}
 	
+	if (Address >= 0xE000 && Address <= 0xFDFF)
+	{
+		GB_Ram[Address - 0xC000] = Value;
+	}
 	return true;
 }
 
@@ -74,5 +105,18 @@ void GB_memory::init()
 	WriteByte(IE_ADDRESS, 0x00);
 
 
+}
+
+GB_DoubleByte GB_memory::ReadDoubleByte(GB_DoubleByte Address)
+{
+	
+	return ReadByte(Address+1) << 8 | ReadByte(Address);
+}
+
+bool GB_memory::WriteDoubleByte(GB_DoubleByte Address, GB_DoubleByte Value)
+{
+	WriteByte(Address, Value & 0x00FF);
+	WriteByte(Address + 1,( Value & 0xFF00)>>8);
+	return true;
 }
 
