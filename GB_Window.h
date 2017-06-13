@@ -21,7 +21,8 @@ public:
 	int mode = 0;
 	int counts = 0;
 	GB_Byte keys;
-	struct SpriteInfo {
+	class SpriteInfo {
+	public:
 		GB_Byte y{ 0 };
 		GB_Byte x{ 0 };
 		GB_Byte tile{ 0 };
@@ -32,7 +33,7 @@ public:
 	
 
 	void drawLine(int ly);
-	std::vector<SpriteInfo> getSprites(int ly, bool big_sprites);
+	vector<SpriteInfo> getSprites(int ly);
 	void resetInterruptFlags();
 	void SetMode(int mode);
 	void updateLyc();

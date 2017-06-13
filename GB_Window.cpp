@@ -4,8 +4,10 @@
 #include<fstream>
 #include "GB_Bits.h"
 #include "GB_Const.h"
+#include <vector>
+#include <algorithm>
 int ColorMap[] = { 255,200,100,0 };
-
+using namespace std;
 void GB_Window::create(int WINDOW_WIDTH , int WINDOW_HEIGHT,int x,int y, string WINDOW_TITLE)
 {
 	SDL_Init(SDL_INIT_VIDEO);
@@ -211,11 +213,7 @@ void GB_Window::drawLine(int ly) {
 	//GB_Byte obp0_data = memory_.ReadByte(OBP0_ADDRESS);
 	//GB_Byte obp1_data = memory_.ReadByte(OBP1_ADDRESS);
 
-	auto palette = [](GB_Byte palette, int color) -> int {
-		int value = palette >> (color * 2);
-		value &= 0x3;
-		return ColorMap[value];
-	};
+	
 	auto color_number = [](int bit, GB_Byte AData, GB_Byte BData) -> int {
 		return (((AData >> bit) & 1) << 1) | ((BData >> bit) & 1);
 	};
@@ -230,9 +228,9 @@ void GB_Window::drawLine(int ly) {
 	int BGTileData = !signed_tile ? 0x9000 : 0x8000;
 	int BGTileMap = !GetBit(lcdc, 3) ? 0x9800 : 0x9C00;
 
-	// BG
-	vector<int> bgcolors(160, 0);
-	if (1==1) {
+	// BackGround
+	
+	if (GetBit(lcdc,0)) {
 		int y = (ly + scy) % 256;
 		GB_Byte AData = 0x00;
 		GB_Byte BData = 0x00;
@@ -258,18 +256,58 @@ void GB_Window::drawLine(int ly) {
 			}
 
 			int color = color_number(pixelX, AData,BData);
-			//bgcolors[i] = color;
-			//GB_Byte pixel = palette(bgp_data, color);
 			setPixel(i, ly, ColorMap[color]);
 		}
 	}
-	else {
-		for (int i = 0; i < 160; i++) {
-			setPixel(i, ly, 0);
+	
+	//Sprites
+
+	
+	vector<SpriteInfo> SpritesDatas = getSprites(ly);
+	int size = SpritesDatas.size();
+	if (size >= 10)
+		size = 10;
+	for (int i = size - 1; i >= 0; i--) {
+		SpriteInfo Spriteinfo = SpritesDatas[i];
+		int PixelY = ly - Spriteinfo.y + 16;
+		bool ReverseX = GetBit(Spriteinfo.flags, 5);
+		bool ReverseY = GetBit(Spriteinfo.flags, 6);
+		bool Priority = GetBit(Spriteinfo.flags, 7);
+
+		GB_Byte SpriteTile = Spriteinfo.tile;
+		SpriteTile =Spriteinfo.tile | 0x01;
+		PixelY -= 8;
+		
+		if (ReverseY) {
+				PixelY = 8 - PixelY - 1;
+				
+			}
+
+			GB_Byte AData = memory_.ReadByte(0x8000 + SpriteTile * 16 +
+				PixelY * 2);
+			GB_Byte BData = memory_.ReadByte(0x8000 + SpriteTile *16 +
+				PixelY * 2 + 1);
+
+			for (int x = 0; x < 8; x++) {
+				if (Spriteinfo.x + x - 8 < 0) {
+					continue;
+				}
+				int PixelX = 8 - x % 8 - 1;
+				if (ReverseX) {
+					PixelX = 8 - PixelX - 1;
+				}
+
+				int color = color_number(PixelX, AData, BData);
+				setPixel(i, ly, ColorMap[color]);
+				
+			}
 		}
+		
 	}
 	
-}
+	
+	
+
 
 void GB_Window::resetInterruptFlags() {
 	GB_Byte interrupts = memory_.ReadByte(IF_ADDRESS);
@@ -316,4 +354,24 @@ void GB_Window::updateLyc() {
 		SetBit(interrupts, 1, true);
 		memory_.WriteByte(IF_ADDRESS, interrupts);
 	}
+}
+
+vector<GB_Window::SpriteInfo> GB_Window::getSprites(int ly) {
+	vector<SpriteInfo> sprites;
+	for (int i = 0; i < 40; i++) {
+		SpriteInfo it = SpriteInfo{ i };
+		if(!(it.y == 0 || it.y >= 160 || ly <= it.y - 16 || ly >= it.y))
+		//{
+			sprites.push_back(it);
+		//}
+		
+	}
+
+	
+	std::sort(sprites.begin(), sprites.end(),
+		[](const SpriteInfo& left, const SpriteInfo& right) {
+		return left.x < right.x;
+	});
+	cout << sprites.size() << endl;
+	return sprites;
 }
