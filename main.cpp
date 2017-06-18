@@ -30,35 +30,32 @@ main(int argc, char *argv[])
 	
 	int i = 0;
 	while (1) {
-		//i++;
-		if (i > 1000000)
-			break;
+		
+		
 		if (!MainWindow.fresh())
 		{
+			cout << "end" << endl;
+			ofstream outRAM;
+			outRAM.open("outRAM.gb", ios::binary);
+
+			for (int i = 0x0000; i <= 0xFFFF; i++)
+			{
+				outRAM << memory_.ReadByte(i);
+			}
+			outRAM.close();
+			cout << "Writen" << endl;
 			break;
 		}
-		MainWindow.AddTime(CPU.CPU_Step());
+		int timing = CPU.CPU_Step();
+		MainWindow.AddTime(timing);
+		timer.div_inc(timing);
+
 
 	}
 	
-	cout << "end" << endl;
-	ofstream outRAM;
-	outRAM.open("outRAM.gb", ios::binary);
-
-	for (int i = 0x0000; i <= 0xFFFF; i++)
-	{
-		outRAM << memory_.ReadByte(i);
-	}
-	outRAM.close();
-	cout << "Writen" << endl;
 	
-	while (1) {
-		if (!MainWindow.fresh())
-		{
-			break;
-		}
-	}
-	MainWindow.end();
+	
+	
 	
 	
 	
