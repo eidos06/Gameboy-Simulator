@@ -6,21 +6,8 @@
 using namespace std;
 extern GB_memory memory_;
 
-
 class GB_Window {
 public:
-	
-	void create (int WINDOW_WIDTH, int WINDOW_HEIGHT, int x, int y, string WINDOW_TITLE);
-	int fresh();
-	void AddTime(int clocks);
-	void end();
-	int NowLine = 0;
-	int NowMode = 0;
-	void setPixel(int x, int y, int color);
-	void draw();
-	int mode = 0;
-	int counts = 0;
-	GB_Byte keys;
 	class SpriteInfo {
 	public:
 		GB_Byte y{ 0 };
@@ -30,32 +17,31 @@ public:
 
 		SpriteInfo(int id);
 	};
-	
 
+	void create (int WINDOW_WIDTH, int WINDOW_HEIGHT, int x, int y, string WINDOW_TITLE);
+	void AddTime(int clocks);
+	void setPixel(int x, int y, int color);
+	int fresh();
+	void draw();
+	void end();
 	void drawLine(int ly);
 	vector<SpriteInfo> getSprites(int ly);
 	void resetInterruptFlags();
 	void SetMode(int mode);
 	void updateLyc();
-	
-	
+
+	int NowLine = 0;
+	int NowMode = 0;
+	int mode = 0;
+	int counts = 0;
 private:
 	SDL_Window *MainWindow;
 	SDL_Surface *MainSurface;
-	SDL_Renderer *MainRenderer;
-	SDL_Texture *MainTexture;
 	SDL_Event e;
-	
-	SDL_Rect position_;
-	uint32_t timer_{ 0 };
 
 	int width;
 	int height;
 	
-	Uint32* pixel;
-	Uint32 color;
 	int done{ 0 };
 	int InnerClock=0;
-
-
 };

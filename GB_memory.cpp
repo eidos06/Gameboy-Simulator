@@ -4,7 +4,7 @@ using namespace std;
 void GB_memory::LoadMemory(const vector<GB_Byte> &inRom)
 {
 	GB_Rom = inRom;
-	GB_Ram.assign(0xFFFF - 0x8000+1, 0x00);
+	GB_Ram.assign(0xFFFF - 0x8000+1, 0x00);//init RAM
 }
 
 GB_Byte GB_memory::ReadByte(GB_DoubleByte Address)
@@ -12,7 +12,9 @@ GB_Byte GB_memory::ReadByte(GB_DoubleByte Address)
 	
 	if (Address < 0x8000)
 		return GB_Rom[Address];
-	else if (Address == 0xFF00)
+	else if (Address >= 0xE000 && Address <= 0xFDFF)//E000 is an echo of C000
+		return GB_Ram[0xC000 + (Address - 0xE000) - 0x8000];
+	else if (Address == 0xFF00)//get input
 	{
 		if (KeyColumn == 0x10)
 		{
@@ -38,7 +40,14 @@ bool GB_memory::WriteByte(GB_DoubleByte Address, GB_Byte Value)
 {
 	if (Address < 0x8000)
 		GB_Rom[Address] = Value;
-	else if (Address == 0xFF00)
+	else if (Address >= 0xC000 && Address <= 0xDDFF)//E000 is an echo of C000
+	{
+		if (Address >= 0xC000 && Address < 0xC0A0)
+			GB_Ram[0xFE00 + (Address - 0xC000) - 0x8000] = Value;
+		GB_Ram[Address-0x8000] = Value;
+		GB_Ram[0xE000 + (Address - 0xC000) - 0x8000] = Value;
+	}
+	else if (Address == 0xFF00)//input
 	{
 		KeyColumn = Value & 0x30;
 	}
@@ -48,9 +57,9 @@ bool GB_memory::WriteByte(GB_DoubleByte Address, GB_Byte Value)
 		GB_Ram[Address - 0x8000] = Value;
 	}
 	
-	if (Address >= 0xE000 && Address <= 0xFDFF)
+	if (Address >= 0xE000 && Address <= 0xFDFF)//E000 is an echo of C000
 	{
-		GB_Ram[Address - 0xC000] = Value;
+		GB_Ram[(Address - 0xE000)+0xC000-0x8000] = Value;
 	}
 	return true;
 }

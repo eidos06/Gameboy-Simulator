@@ -2,9 +2,14 @@
 #include <iostream>
 #include <fstream>
 using namespace std;
-//ofstream outfile;
+#ifdef DEBUG
+ofstream outfile;
+int counts = 0;
+#endif // DEBUG
+
 void GB_CPU::init()
 {
+	//init registers 
 	Reg_A = 0x01;
 	Reg_F = 0xB0;
 	Reg_B = 0x00;
@@ -15,47 +20,43 @@ void GB_CPU::init()
 	Reg_L = 0x4D;
 	Reg_PC = 0x0100;
 	Reg_SP = 0xFFFE;
+	//load opcodes in function array
 	Opcode_load();
-	//outfile.open("opcode1.txt");
+#ifdef DEBUG
+	outfile.open("opcode1.txt");
+#endif // DEBUG
+
 }
 
 int GB_CPU::CPU_Step() {
-	
+	//default timing increase
 	int AddTime = 4;
-	//Êä³ö
-	/*
-	counts++;
-	outfile << "Reg_PC:" << hex << Reg_PC << std::endl;
-	outfile <<dec<<counts<<std::endl<< "REG_PC:" <<hex<< Reg_PC <<std::endl<< " REG_A:" << hex << (int)Reg_A << " REG_F:" << hex << (int)Reg_F << " Reg_B:" << hex << (int)Reg_B << " Reg_C:" << hex << (int)Reg_C << " Reg_D:" << hex << (int)Reg_D << " Reg_E:" << hex << (int)Reg_E << " Reg_H:" << hex << (int)Reg_H << " Reg_L:" << hex << (int)Reg_L << " Reg_SP:" << hex << Reg_SP<< std::endl;
-	outfile << std::endl << "Flag_Z:" << GetFlag(FLAG_ZERO) << " Flag_N:" << GetFlag(FLAG_SUBTRACT) << " Flag_H:" << GetFlag(FLAG_HALFCARRY) << " Flag_C:" << GetFlag(FLAG_CARRY)<< std::endl << std::endl;
-	
-	*/
-
-
-	//Êä³ö½áÊø
-	GB_Byte InterruptEnable = memory_.ReadByte(0xFFFF);
-	GB_Byte InterruptFlag = memory_.ReadByte(IF_ADDRESS);
-	bool Interrupts = InterruptEnable&InterruptFlag;
+	//load interrupts
+	GB_Byte InterruptEnable = memory_.ReadByte(0xFFFF);//interrupt are enabled in system?
+	GB_Byte InterruptFlag = memory_.ReadByte(IF_ADDRESS);//interrupt occured?
+	bool Interrupts = InterruptEnable & InterruptFlag;//Has interrupt
 	
 	if (Flag_INTERRUPT && Interrupts)//Has Interrupts
 	{
-		for (int i = 0; i <= 4; i++)// Operate 4 kinds of interrupts
+		for (int i = 4; i >= 0; i--)// Operate 4 kinds of interrupts by order
 		{
 			GB_Byte tmp= InterruptEnable&InterruptFlag;
-			if (GetBit(tmp,i))
+			if (GetBit(tmp,i))//decide which kind of interupt occur
 			{
-				SetBit(InterruptFlag, i,false);
+				//disable interrupt that has operated
+				SetBit(InterruptFlag,i,false);
 				memory_.WriteByte(IF_ADDRESS, InterruptFlag);
-
 				Flag_INTERRUPT = false;
+				//push now PC into stack
 				memory_.WriteByte(--Reg_SP, (Reg_PC >> 8) & 0xFF);
 				memory_.WriteByte(--Reg_SP, Reg_PC & 0xFF);
+				//jump to interrupt operator
 				Reg_PC = 0x40 + i * 0x08;
-
+				//reset halt
 				Flag_HALT = false;
 				AddTime = 12;
-				//cout << "Interrupt" << i << endl;
 				break;
+				
 				
 			}
 		}
@@ -63,89 +64,36 @@ int GB_CPU::CPU_Step() {
 	else if (!Flag_INTERRUPT&&InterruptFlag&&Flag_HALT)//Operate halt
 	{
 		Flag_HALT = false;
-		cout << "halt" << endl;
+		
 	}
 	else if (!Flag_HALT)
 	{
-		AddTime=GB_Opcode[memory_.ReadByte(Reg_PC++)]();
-		
-	}
-	
+		AddTime = GB_Opcode[memory_.ReadByte(Reg_PC++)]();//no interupts nor halt
+	#ifdef DEBUG
+		counts++;
+		outfile << dec << counts << std::endl << "REG_PC:" << hex << Reg_PC << std::endl << " REG_A:" << hex << (int)Reg_A << " REG_F:" << hex << (int)Reg_F << " Reg_B:" << hex << (int)Reg_B << " Reg_C:" << hex << (int)Reg_C << " Reg_D:" << hex << (int)Reg_D << " Reg_E:" << hex << (int)Reg_E << " Reg_H:" << hex << (int)Reg_H << " Reg_L:" << hex << (int)Reg_L << " Reg_SP:" << hex << Reg_SP << std::endl;
+		outfile << std::endl << "Flag_Z:" << GetFlag(FLAG_ZERO) << " Flag_N:" << GetFlag(FLAG_SUBTRACT) << " Flag_H:" << GetFlag(FLAG_HALFCARRY) << " Flag_C:" << GetFlag(FLAG_CARRY) << std::endl << std::endl;
+	#endif
 
-	
-	
+	}
+
+	AddTime = GB_Opcode[memory_.ReadByte(Reg_PC++)]();
+
 	return AddTime;
-	/*
-	//char a;
-	//cin >> a;
-	ofstream outfile;
-	ofstream outRAM;
-	outfile.open("opcode1.txt");
-	outRAM.open("outRAM.gb",ios::binary);
 
-	for (int i = 0; i < 88000; i++)
-	{
-		//std::cout << "Reg_PC:" << hex << Reg_PC << std::endl;
-		//outfile <<dec<<i<<std::endl<< "REG_PC:" <<hex<< Reg_PC <<std::endl<< " REG_A:" << hex << (int)Reg_A << " REG_F:" << hex << (int)Reg_F << " Reg_B:" << hex << (int)Reg_B << " Reg_C:" << hex << (int)Reg_C << " Reg_D:" << hex << (int)Reg_D << " Reg_E:" << hex << (int)Reg_E << " Reg_H:" << hex << (int)Reg_H << " Reg_L:" << hex << (int)Reg_L << " Reg_SP:" << hex << Reg_SP<< std::endl;
-		//outfile << std::endl << "Flag_Z:" << GetFlag(FLAG_ZERO) << " Flag_N:" << GetFlag(FLAG_SUBTRACT) << " Flag_H:" << GetFlag(FLAG_HALFCARRY) << " Flag_C:" << GetFlag(FLAG_CARRY)<< std::endl << std::endl;
-		
-		int AddTime = 4;
-
-		GB_Byte InterruptEnable = memory_.ReadByte(0xFFFF);
-		GB_Byte InterruptFlag = memory_.ReadByte(0xFF0F);
-		bool Interrupts = InterruptEnable&InterruptFlag;
-
-		if (Flag_INTERRUPT && Interrupts)//Has Interrupts
-		{
-			for (int i = 0; i <= 4; i++)// Operate 4 kinds of interrupts
-			{
-				if (((InterruptEnable&InterruptFlag) >> i) & 0x01)
-				{
-					InterruptFlag ^= (0 ^ InterruptFlag)&(1 << i);
-					memory_.WriteByte(0xFF0F, InterruptFlag);
-
-					Flag_INTERRUPT = false;
-					memory_.WriteByte(--Reg_SP, (Reg_PC >> 8) & 0xFF);
-					memory_.WriteByte(--Reg_SP, Reg_PC & 0xFF);
-					Reg_PC = 0x40 + i * 0x08;
-
-					Flag_HALT = false;
-					AddTime = 12;
-					break;
-
-				}
-			}
-		}
-		else if (!Flag_INTERRUPT&&InterruptFlag&&Flag_HALT)//Operate halt
-		{
-			Flag_HALT = false;
-		}
-		else if (!Flag_HALT)
-		{
-			AddTime = GB_Opcode[memory_.ReadByte(Reg_PC++)]();
-		}
-		
-	}
-	
-	for (int i = 0x0000; i <= 0xFFFF; i++)
-	{
-		outRAM << memory_.ReadByte(i);
-	}
-	outfile.close();
-	outRAM.close();
-	std::cout << "OK" << std::endl;
-	*/
 }
 
 
 
 void GB_CPU::Opcode_load()
 {
+	//init opcodes arrays
 	for (int i = 0; i < 0x100; i++)
 	{
 		GB_Opcode[i] = [&]()->int {return 4;};
 		GB_CBOpcode[i] = [&]()->int {return 4; };
 	}
+	//use lamda function to describe AF,BC,DE,HL
 	auto Reg_AF = [&]()-> GB_DoubleByte {return (Reg_A << 8) | Reg_F; };
 	auto Reg_BC = [&]()-> GB_DoubleByte {return (Reg_B << 8) | Reg_C; };
 	auto Reg_DE = [&]()-> GB_DoubleByte {return (Reg_D << 8) | Reg_E; };
@@ -305,15 +253,15 @@ void GB_CPU::Opcode_load()
 	GB_Opcode[0x08] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {memory_.WriteDoubleByte(Reg_PC, Reg_SP); Reg_PC += 2; return 20; };
 
 	//PUSH nn
-	GB_Opcode[0xF5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_SP = Reg_SP - 2; memory_.WriteDoubleByte(Reg_SP, Reg_AF()); return 16; };
-	GB_Opcode[0xC5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_SP = Reg_SP - 2; memory_.WriteDoubleByte(Reg_SP, Reg_BC()); return 16; };
-	GB_Opcode[0xD5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_SP = Reg_SP - 2; memory_.WriteDoubleByte(Reg_SP, Reg_DE()); return 16; };
-	GB_Opcode[0xE5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_SP = Reg_SP - 2; memory_.WriteDoubleByte(Reg_SP, Reg_HL()); return 16; };
+	GB_Opcode[0xF5] = [&, Reg_AF, Reg_BC, Reg_DE, Reg_HL]()->int {memory_.WriteByte(--Reg_SP, Reg_A); memory_.WriteByte(--Reg_SP, Reg_F); return 16; };
+	GB_Opcode[0xC5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {memory_.WriteByte(--Reg_SP, Reg_B); memory_.WriteByte(--Reg_SP, Reg_C); return 16; };
+	GB_Opcode[0xD5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {memory_.WriteByte(--Reg_SP, Reg_D); memory_.WriteByte(--Reg_SP, Reg_E); return 16; };
+	GB_Opcode[0xE5] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {memory_.WriteByte(--Reg_SP, Reg_H); memory_.WriteByte(--Reg_SP, Reg_L); return 16; };
 	//POP nn
-	GB_Opcode[0xF1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_F = memory_.ReadByte(Reg_SP); Reg_A = memory_.ReadByte(Reg_SP + 1); Reg_SP += 2; return 16; };
-	GB_Opcode[0xC1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_C = memory_.ReadByte(Reg_SP); Reg_B = memory_.ReadByte(Reg_SP + 1); Reg_SP += 2; return 16; };
-	GB_Opcode[0xD1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_E = memory_.ReadByte(Reg_SP); Reg_D = memory_.ReadByte(Reg_SP + 1); Reg_SP += 2; return 16; };
-	GB_Opcode[0xE1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_L = memory_.ReadByte(Reg_SP); Reg_H = memory_.ReadByte(Reg_SP + 1); Reg_SP += 2; return 16; };
+	GB_Opcode[0xF1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_F = memory_.ReadByte(Reg_SP++); Reg_A = memory_.ReadByte(Reg_SP++);  return 16; };
+	GB_Opcode[0xC1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_C = memory_.ReadByte(Reg_SP++); Reg_B = memory_.ReadByte(Reg_SP++); return 16; };
+	GB_Opcode[0xD1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_E = memory_.ReadByte(Reg_SP++); Reg_D = memory_.ReadByte(Reg_SP++);  return 16; };
+	GB_Opcode[0xE1] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Reg_L = memory_.ReadByte(Reg_SP++); Reg_H = memory_.ReadByte(Reg_SP++); return 16; };
 	//ADD A,n
 	
  	GB_Opcode[0x87] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {GB_ADD(Reg_A); return 4; };
@@ -544,10 +492,10 @@ void GB_CPU::Opcode_load()
 	GB_Opcode[0x10] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {Flag_HALT = true; return 4; };
 
 	//DI
-	GB_Opcode[0xF3] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]() -> int{ Flag_INTERRUPT = false; return 4; };
+	GB_Opcode[0xF3] = [&, Reg_AF, Reg_BC, Reg_DE, Reg_HL]() -> int {Flag_INTERRUPT = false;  return 4; };
 
 	//EI
-	GB_Opcode[0xFB] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]() ->int {Flag_INTERRUPT = true; return 4; };
+	GB_Opcode[0xFB] = [&, Reg_AF, Reg_BC, Reg_DE, Reg_HL]() ->int {Flag_INTERRUPT = true; return 4; };
 
 	//RLCA
 	GB_Opcode[0x07] = [&,Reg_AF,Reg_BC,Reg_DE,Reg_HL]()->int {GB_RLC(Reg_A); return 4; };
@@ -972,14 +920,14 @@ void GB_CPU::GB_SBC(GB_Byte num1)
 
 void GB_CPU::GB_AND(GB_Byte num1)
 {
-	GB_DoubleByte tmp = Reg_A & num1;
+	Reg_A &= num1;
 
-	SetFlag(FLAG_ZERO,(tmp == 0 || tmp == 0x100));
+	SetFlag(FLAG_ZERO,Reg_A==0);
 	SetFlag(FLAG_SUBTRACT,0);
 	SetFlag(FLAG_HALFCARRY, 1);
 	SetFlag(FLAG_CARRY,0);
 
-	Reg_A = tmp&0xFF;
+	
 }
 
 void GB_CPU::GB_OR(GB_Byte num1)
@@ -1009,11 +957,11 @@ void GB_CPU::GB_XOR(GB_Byte num1)
 void GB_CPU::GB_CP(GB_Byte num1)
 {
 	GB_DoubleByte tmp = Reg_A - num1;
-
+	
 	SetFlag(FLAG_ZERO, (tmp == 0 || tmp==0x100));
 	SetFlag(FLAG_SUBTRACT, 1);
 	SetFlag(FLAG_HALFCARRY,(tmp^Reg_A^num1) & 0x10);
-	SetFlag(FLAG_CARRY,(tmp^Reg_A^num1) & 0x100);
+	SetFlag(FLAG_CARRY,((tmp^Reg_A^num1) & 0x100) );
 
 
 }
